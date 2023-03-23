@@ -3,7 +3,7 @@ import trimesh
 import pyvista as pv
 
 
-stl = trimesh.load('bizar_mesh.stl')
+stl = trimesh.load('random_object.stl')
 
 magnet = magpy.magnet.TriangularMesh(
     magnetization=(0, 0, 1000),
