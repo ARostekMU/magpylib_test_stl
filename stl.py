@@ -1,9 +1,10 @@
 import magpylib as magpy
 import trimesh
 import pyvista as pv
+import numpy as np
 
 
-stl = trimesh.load('random_object.stl')
+stl = trimesh.load('random_object_finer.stl')
 
 magnet = magpy.magnet.TriangularMesh(
     magnetization=(0, 0, 1000),
@@ -21,11 +22,23 @@ grid = pv.UniformGrid(
 
 slice = grid.slice(normal=(1,0,0), origin=(0,0,0))
 
-slice['B'] = magnet.getB(slice.points)
 
-pl = pv.Plotter()
+arr = np.zeros((len(slice.points),3))
+
+# This is a workaround so that magpylib does not eat all the memory 
+part_len = 10000
+for i in range(len(slice.points)//part_len):
+    print(i, '/', len(slice.points)//part_len)
+    arr[i*part_len:(i+1)*part_len] = magnet.getB(slice.points[i*part_len:(i+1)*part_len])
+
+
+slice['B'] = arr #magnet.getB(slice.points)
+
+pl = pv.Plotter(off_screen=True)
 
 pl.add_mesh(slice, scalars='B', cmap="jet")
 pl.show_axes()
+pl.camera_position = 'yz'
 pl.set_background("white")
-pl.show()
+#pl.show()
+pl.screenshot(filename=f"part_len_{part_len}.png", )
