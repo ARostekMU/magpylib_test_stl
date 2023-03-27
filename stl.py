@@ -25,11 +25,28 @@ slice = grid.slice(normal=(1,0,0), origin=(0,0,0))
 
 arr = np.zeros((len(slice.points),3))
 
-# This is a workaround so that magpylib does not eat all the memory 
-part_len = 10000
-for i in range(len(slice.points)//part_len):
+import multiprocessing
+
+part_len = 1000
+
+def process_slice(slice, i, arr):
     print(i, '/', len(slice.points)//part_len)
     arr[i*part_len:(i+1)*part_len] = magnet.getB(slice.points[i*part_len:(i+1)*part_len])
+
+if __name__ == '__main__':
+    pool = multiprocessing.Pool()
+    num_slices = len(slice.points)//part_len
+    args = [(slice, i, arr) for i in range(num_slices)]
+    pool.starmap(process_slice, args)
+    pool.close()
+    pool.join()
+
+
+# This is a workaround so that magpylib does not eat all the memory 
+#part_len = 10000
+#for i in range(len(slice.points)//part_len):
+#    print(i, '/', len(slice.points)//part_len)
+#    arr[i*part_len:(i+1)*part_len] = magnet.getB(slice.points[i*part_len:(i+1)*part_len])
 
 
 slice['B'] = arr #magnet.getB(slice.points)
